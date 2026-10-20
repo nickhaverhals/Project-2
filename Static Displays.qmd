@@ -1,0 +1,76 @@
+---
+title: "Static Displays"
+format: pdf
+editor: visual
+---
+
+In this document, I'm going to create some static displays so I get some practice creating summaries that will eventually be in my Shiny app. 
+
+The first thing I'm going to do is create a tibble out of the data in my spreadsheet. 
+
+```{r}
+# Load the tidyverse and save the data to a tibble with a short 
+library(tidyverse)
+#Create student data tibble
+
+student_data<-read_csv("data.csv",locale=locale(encoding="latin1"))
+
+student_data
+```
+
+Note that I was getting an "Error in nchar(x, "width") : invalid multibyte string, element 1" error to begin with so I found the added argument above on Stack Overflow, which fixed it. 
+
+Next, we can see that there are columns here that we won't need and columns with names that are longer than I'd like. There are also columns being treated as numerical which should be logical. So, I'm going to clean this up a bit more and make the tibble more pithily named, so it's easier to type. I
+
+
+```{r}
+
+ # First, I'll save the names as they are, in case I want to refer to them later in the app. 
+  
+og_questions<-colnames(student_data)
+  
+
+studata<-student_data|>
+  
+  # Rename columns I'm keeping
+  rename(
+    num_pets = 7,
+    dist = all_of(9),
+    minutes = 10,
+    how_old = 11,
+    us_born = 12,
+    name_ltrs = 13,
+    since_movie = all_of(14),
+    num_stufies = 15,
+    non_scsu = 16,
+    stu_yr = 17,
+    rand_num = 18,
+    semester = 19,
+    acad_yr = 20,
+    dog = 21,
+    cat = 22, 
+    reptile = 23,
+    fish = 24, 
+    bird = 25,
+    other = 26,
+    none = 27)|>
+  
+  # Remove unneeded columns
+  select(-c(1:6,8,28))|>
+  
+  #Change numerical values to logical, as appropriate. Note the mix of Yes/No and 0/1 that needs to be accounted for.
+  
+  mutate(us_born = (us_born == "Yes"),
+         non_scsu = (non_scsu == "Yes"),
+         dog = (dog == 1), 
+         cat = (cat == 1),
+         reptile = (reptile == 1),
+         fish = (fish == 1),
+         bird = (bird == 1),
+         other = (other ==1),
+         none = (none ==1))
+         
+og_questions
+studata
+```
+

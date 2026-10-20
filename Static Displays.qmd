@@ -4,7 +4,11 @@ format: pdf
 editor: visual
 ---
 
+
+
 In this document, I'm going to create some static displays so I get some practice creating summaries that will eventually be in my Shiny app. 
+
+# Cleaning things up a bit
 
 The first thing I'm going to do is create a tibble out of the data in my spreadsheet. 
 
@@ -41,7 +45,7 @@ studata<-student_data|>
     us_born = 12,
     name_ltrs = 13,
     since_movie = all_of(14),
-    num_stufies = 15,
+    num_stuffies = 15,
     non_scsu = 16,
     stu_yr = 17,
     rand_num = 18,
@@ -58,19 +62,51 @@ studata<-student_data|>
   # Remove unneeded columns
   select(-c(1:6,8,28))|>
   
-  #Change numerical values to logical, as appropriate. Note the mix of Yes/No and 0/1 that needs to be accounted for.
+  #Change numerical values to 'Yes' or 'No', as appropriate.
   
-  mutate(us_born = (us_born == "Yes"),
-         non_scsu = (non_scsu == "Yes"),
-         dog = (dog == 1), 
-         cat = (cat == 1),
-         reptile = (reptile == 1),
-         fish = (fish == 1),
-         bird = (bird == 1),
-         other = (other ==1),
-         none = (none ==1))
+  mutate(dog = if_else(dog == 1,"Yes","No"), 
+         cat = if_else(cat == 1,"Yes","No"),
+         reptile = if_else(reptile == 1,"Yes","No"),
+         fish = if_else(fish == 1,"Yes","No"),
+         bird = if_else(bird == 1,"Yes","No"),
+         other = if_else(other == 1,"Yes","No"),
+         none = if_else(none == 1,"Yes","No")) |>
+
+#Looking at the result from the code above, I decided it'd be nice to group the qualitative and quantitative columns. So, I added that to the pipe.
+  select(5,7,9,10,12:20,everything())
          
 og_questions
 studata
+```
+Now, columns 1 - 13 are categorical and columns 14 - 20 are numerical variables. 
+
+# Numerical summaries
+
+The first thing I'm going to do is create simple numerical summaries of the numerical data. 
+
+```{r}
+# First, mean and standard deviation
+mean_sum<-apply(X=studata |> select(where(is.numeric)), 
+                MARGIN = 2,
+                FUN = function(x){
+                  temp = c(mean(x),sd(x))
+                  names(temp)<-c("mean", "sd")
+                  temp
+                }
+)
+mean_sum
+
+```
+
+Now, the five number summaries:
+
+```{r}
+
+#5 Number summaries
+five_num_sum<-apply(X=studata |> select(where(is.numeric)), 
+                MARGIN = 2,
+                FUN = summary
+)
+five_num_sum
 ```
 

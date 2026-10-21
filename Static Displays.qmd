@@ -8,15 +8,13 @@ include-in-header:
 editor: visual
 ---
 
-
-
-In this document, I'm going to create some static displays so I get some practice creating summaries that will eventually be in my Shiny app. 
+In this document, I'm going to create some static displays so I get some practice creating summaries that will eventually be in my Shiny app.
 
 # Prepare for your App
 
 ##Cleaning things up a bit
 
-The first thing I'm going to do is create a tibble out of the data in my spreadsheet. 
+The first thing I'm going to do is create a tibble out of the data in my spreadsheet.
 
 ```{r}
 # Load the tidyverse, ggplot and save the data to a tibble with a short 
@@ -29,10 +27,9 @@ student_data<-read_csv("data.csv",locale=locale(encoding="latin1"))
 student_data
 ```
 
-Note that I was getting an "Error in nchar(x, "width") : invalid multibyte string, element 1" error to begin with so I found the added argument above on Stack Overflow, which fixed it. 
+Note that I was getting an "Error in nchar(x, "width") : invalid multibyte string, element 1" error to begin with so I found the added argument above on Stack Overflow, which fixed it.
 
 Next, we can see that there are columns here that we won't need and columns with names that are longer than I'd like. There are also columns being treated as numerical which should be logical. So, I'm going to clean this up a bit more and make the tibble more pithily named, so it's easier to type. I
-
 
 ```{r}
 
@@ -104,7 +101,7 @@ Looks ready to roll!
 
 ## Numerical summaries
 
-The first thing I'm going to do is create simple numerical summaries of the numerical data. 
+The first thing I'm going to do is create simple numerical summaries of the numerical data.
 
 ```{r}
 # First, mean and standard deviation
@@ -134,7 +131,7 @@ five_num_sum
 
 ## Categorical summaries
 
-Next, let's look at some qualitative data. First, I'd like to look at how my students break out by class level: 
+Next, let's look at some qualitative data. First, I'd like to look at how my students break out by class level:
 
 ```{r}
 studata|>
@@ -142,7 +139,7 @@ studata|>
   summarize(count=n())
 ```
 
-Being an introductory course, it makes sense that students would be primarily from lower class levels. Note that PSEO a designation for high school students registered at SCSU. 
+Being an introductory course, it makes sense that students would be primarily from lower class levels. Note that PSEO a designation for high school students registered at SCSU.
 
 Now, how about looking at students who've attended other institutions, by year.
 
@@ -153,9 +150,9 @@ studata|>
   pivot_wider(names_from = non_scsuF, values_from = count)
 ```
 
-Again, these results make sense. Lower level students (Freshman and Sophomore) are much less likely to have transferred. 
+Again, these results make sense. Lower level students (Freshman and Sophomore) are much less likely to have transferred.
 
-_Now_ I'm curious about whether there's a difference in class level versus Semester. My guess is that more freshman focus on STAT 103 (a general education course) during the fall. 
+*Now* I'm curious about whether there's a difference in class level versus Semester. My guess is that more freshman focus on STAT 103 (a general education course) during the fall.
 
 ```{r}
 studata|>
@@ -168,9 +165,9 @@ Interestingly, Fall is more popular in roughly the same proportion across the bo
 
 ## Numerical and categorical Summaries
 
-Next, lets look at some numerical summaries broken down at levels for categorical data. 
+Next, lets look at some numerical summaries broken down at levels for categorical data.
 
-First up, I'm interested in the mean number of stuffed animals the students own, separated by whether they have pets. 
+First up, I'm interested in the mean number of stuffed animals the students own, separated by whether they have pets.
 
 ```{r}
 studata|>
@@ -178,17 +175,17 @@ studata|>
   summarize(mean_stuffies = mean(num_stuffies))
 ```
 
-I'm a little surprised, actually, that the difference is so stark here. 
+I'm a little surprised, actually, that the difference is so stark here.
 
-Next up, I'm curious about how students have judged my age over the last few years. 
+Next up, I'm curious about how students have judged my age over the last few years.
 
 ```{r}
 studata|>
   group_by(acad_yrF)|>
   summarize(mean_guess = mean(how_old))
 ```
-Clearly, my exposure to Benjamin Button is having the desired effect. Sadly, the decrease of more than a year between Fall 2025 and Fall 2026 is not directly observable in the table. Let's see if we can make it so. 
 
+Clearly, my exposure to Benjamin Button is having the desired effect. Sadly, the decrease of more than a year between Fall 2025 and Fall 2026 is not directly observable in the table. Let's see if we can make it so.
 
 ```{r}
 studata|>
@@ -197,13 +194,13 @@ studata|>
   pivot_wider(names_from = acad_yrF, values_from = mean_guess)
 ```
 
-There we go! We don't need to consider Spring 2026 to Fall 2026. 
+There we go! We don't need to consider Spring 2026 to Fall 2026.
 
 Now, for some...
 
 ## Plots
 
-To keep things simple to start, I'm going to make a nice bar graph of how long it's been since the students have seen a movie. 
+To keep things simple to start, I'm going to make a nice bar graph of how long it's been since the students have seen a movie.
 
 ```{r}
 movie_bar<-ggplot(data=studata,aes(x=since_movieF))+geom_bar()+labs(
@@ -213,7 +210,7 @@ movie_bar<-ggplot(data=studata,aes(x=since_movieF))+geom_bar()+labs(
 movie_bar
 ```
 
-We can make this a little more interesting. First, I'm going to see if I can make break the bars down by class level. 
+We can make this a little more interesting. First, I'm going to see if I can make break the bars down by class level.
 
 ```{r}
 movie_bar2<-ggplot(data=studata,aes(x = since_movieF, fill = stu_yrF))+geom_bar()+labs(
@@ -243,7 +240,7 @@ movie_bar4<-ggplot(data=studata,aes(x = since_movieF, fill = us_bornF))+geom_bar
 movie_bar4
 ```
 
-Other than the raw numbers being different, I don't see a substantial difference in moving going behavior here. 
+Other than the raw numbers being different, I don't see a substantial difference in moving going behavior here.
 
 Next, let's look at a few numerical variables. One I find very interesting is what happens when I ask students to enter a random number. If you haven't seen it, you might find [the video that inspired the question interesting](https://youtu.be/d6iQrh2TK98?si=cmeKnHIXzO4LFi5A). Anyway, here's the histogram of the students' "random" numbers.
 
@@ -252,14 +249,14 @@ hist<-ggplot(data = studata, aes(rand_num))+geom_histogram()+labs(title = "Rando
 hist
 ```
 
-I get that one could argue that this shouldn't be considered numeric because nothing's being measured, but I do think students use some "numberness" in making their selections. Ok, fine, you're not convinced. Here's a histogram for the number of minutes students reporting spending on their phone: 
+I get that one could argue that this shouldn't be considered numeric because nothing's being measured, but I do think students use some "numberness" in making their selections. Ok, fine, you're not convinced. Here's a histogram for the number of minutes students reporting spending on their phone:
 
 ```{r}
 hist2<-ggplot(data = studata, aes(minutes))+geom_histogram(fill="blue",color="black",linetype="solid")+labs(title = "Time spent on phone", x = "Self reported time spent on cellphone")
 hist2
 ```
 
-Next, I'd like to look at the relationship between students' time spent on their phones and their class level. I'm wondering if being a younger student corresponds in more phone time. 
+Next, I'd like to look at the relationship between students' time spent on their phones and their class level. I'm wondering if being a younger student corresponds in more phone time.
 
 ```{r}
 box<-ggplot(data = studata, aes(x = stu_yrF, y = minutes)) + geom_boxplot() + labs(title = "Time spent on phone by class level", x = "Class Level", y = "Minutes on day of survey")
@@ -267,7 +264,7 @@ box<-ggplot(data = studata, aes(x = stu_yrF, y = minutes)) + geom_boxplot() + la
 box
 ```
 
-This worked, but the outliers in the freshman class are making it hard to see the other boxplots too well. 
+This worked, but the outliers in the freshman class are making it hard to see the other boxplots too well.
 
 ```{r}
 #Remove data values over 200 minutes
@@ -278,7 +275,7 @@ box2<-ggplot(data = temp_data, aes(x = stu_yrF, y = minutes)) + geom_boxplot() +
 box2
 ```
 
-Next, I'd like to look at the relationship between distance traveled to class and minutes spent on phone, in a scatter plot. 
+Next, I'd like to look at the relationship between distance traveled to class and minutes spent on phone, in a scatter plot.
 
 ```{r}
 scat<-ggplot(studata, aes(x = dist, y = minutes, color = stu_yrF)) + geom_point() + labs(title = " Plot of distance traveled to class vs. time spent on phone", x = "Distance traveled" , y = "Time on phone", color = "Class level")
@@ -286,7 +283,7 @@ scat<-ggplot(studata, aes(x = dist, y = minutes, color = stu_yrF)) + geom_point(
 scat
 ```
 
-Finally, I'd like to look at a violin plot (I don't think we did one of those in class) of students' guesses for my age, based on their class level. I'm curious if older students are better guessers. 
+Finally, I'd like to look at a violin plot (I don't think we did one of those in class) of students' guesses for my age, based on their class level. I'm curious if older students are better guessers.
 
 ```{r}
 age_vi<-ggplot(studata, aes(x = stu_yrF, y = how_old)) + geom_violin(scale = "area", fill = "blue") + labs(title = "Guesses for age by class level", x = "Class level" , y = "Age guess")
@@ -294,9 +291,9 @@ age_vi<-ggplot(studata, aes(x = stu_yrF, y = how_old)) + geom_violin(scale = "ar
 age_vi
 ```
 
-It sure seems like the younger the students are, the more all-over-the-place their guesses become. 
+It sure seems like the younger the students are, the more all-over-the-place their guesses become.
 
-Finally, I'd like to give making a heat map a try, even though I don't think it'll be particularly meaningful here. 
+Finally, I'd like to give making a heat map a try, even though I don't think it'll be particularly meaningful here.
 
 ```{r}
 heat<-ggplot(studata, aes(x = dist, y = minutes)) + geom_contour_filled(aes(z = how_old))
@@ -304,4 +301,4 @@ heat<-ggplot(studata, aes(x = dist, y = minutes)) + geom_contour_filled(aes(z = 
 heat
 ```
 
-As expected, this isn't terribly useful but it's here! It's interesting that there were 44 records dropped. I wouldn't have thought there were that many students who reported the same distance and minutes. Looking at the data, though, it's because many students rounded to either 30 or 60 minutes and students who live on campus often entered 0.1 or 0.2 miles, creating a lot of duplication for these variables. 
+As expected, this isn't terribly useful but it's here! It's interesting that there were 44 records dropped. I wouldn't have thought there were that many students who reported the same distance and minutes. Looking at the data, though, it's because many students rounded to either 30 or 60 minutes and students who live on campus often entered 0.1 or 0.2 miles, creating a lot of duplication for these variables.

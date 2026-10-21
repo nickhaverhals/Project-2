@@ -34,7 +34,7 @@ a. I also added columns for Semester (Fall or Spring) [variable: semester] and A
 b. For question 9, I had a few outlandish answers: 10000000 and 98765432. The average of all other values was 7.5 stuffed animals so I replaced them with 7 and 8, respectively. 
 
 c. Question 2 allowed for multiple selections so I created new columns to record whether students recorded, "Dog", "Cat", "Reptile", "Fish", "Bird", "Other", or 
-"None". I also added a "Primary pet" column which recorded the first pet listed but I think I won't use it, as it's misleading. The first pet listed was determined by the selection boxes, not necessarily what the student would consider their "primary" pet. So, that column is biased toward "Dog" and, although that's the right answer, it likely doesn't represent students' views faithfully. 
+"None" for question 2. I also added a "Primary pet" column which recorded the first pet listed but I think I won't use it, as it's misleading. The first pet listed was determined by the selection boxes, not necessarily what the student would consider their "primary" pet. So, that column is biased toward "Dog" and, although that's the correct answer, it likely doesn't represent all students' views faithfully. 
 
 
 

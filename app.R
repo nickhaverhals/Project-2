@@ -6,7 +6,7 @@ library(tidyverse)
 #source("helpers.R")
 
 
-# Load the data
+# Load, clean the data----
 student_data <- read_csv("data.csv", locale = locale(encoding = "ISO-8859-1"))
 
 og_questions<-colnames(student_data)
@@ -67,6 +67,7 @@ studata<-student_data|>
          
   )
 
+# Create UI ----
 # Create sidebar and widgets
 
 ui<-page_sidebar(
@@ -76,17 +77,58 @@ ui<-page_sidebar(
     width = 500,
     
     #Begin user instructions
-    h2("Select two numeric variables to analyze"),
+    h3("Below, select the variables you'd like to analyze. See the About tab for more details."),
+    
+    h4("Select two categorical variables"),
+    
+    # Select first categorical variable
+    selectInput(inputId = "cat1",
+                label = "First categorical variable",
+                choices = c("Native to US" = "us_bornF",
+                            "Time since going to the cinema" = "since_movieF",
+                            "Transfer status" = "non_scsuF",
+                            "University class level" = "stu_yrF",
+                            "Semester" = "semesterF",
+                            "Academic Year" = "acad_yrF",
+                            "Pet owner (any)" = "noneF",
+                            "Dog owner" = "dogF",
+                            "Cat owner" = "catF",
+                            "Reptile owner" = "reptileF",
+                            "Bird owner" = "birdF",
+                            "Other animal" = "otherF"),
+                selected = "noneF"
+    ),
+                  
+    # Select second categorical variable
+    selectInput(inputId = "cat2",
+                label = "Second categorical variable",
+                choices = c("Native to US" = "us_bornF",
+                            "Time since going to the cinema" = "since_movieF",
+                            "Transfer status" = "non_scsuF",
+                            "University class level" = "stu_yrF",
+                            "Semester" = "semesterF",
+                            "Academic Year" = "acad_yrF",
+                            "Pet owner (any)" = "noneF",
+                            "Dog owner" = "dogF",
+                            "Cat owner" = "catF",
+                            "Reptile owner" = "reptileF",
+                            "Bird owner" = "birdF",
+                            "Other animal" = "otherF"),
+                selected = "stu_yr"
+    ),
+    
+    h4("Select two numeric variables"),
     
     #Select first numeric variable
     selectInput(inputId="x",
                 label = "First numeric variable, x",
-                choices = c("How many pets do you have?" = "num_pets",
-                            "How many minutes have you spent using your phone so far today?" = "minutes",
-                            "How old do you think your stats professor is?" = "how_old",
-                            "How many letters are in the name you prefer your friends and family call you?" = "name_ltrs",
-                            "How many stuffed animals do you own?" = "num_stuffies",
-                            "Randomly select a whole number between 1 and 10 (inclusive)." = "rand_num"),
+                choices = c("Number of pets" = "num_pets",
+                            "Distance traveled to class" = "dist",
+                            "Time on phone in minutes" = "minutes",
+                            "Guess at professor's age" = "how_old",
+                            "Number of letters in nickname" = "name_ltrs",
+                            "Number of stuffed animals" = "num_stuffies",
+                            "Randomly selected number" = "rand_num"),
                 selected = "num_pets"
                 ),
     
@@ -96,12 +138,13 @@ ui<-page_sidebar(
     #Select second numeric variable
     selectInput(inputId="y",
                 label = "Second numeric variable, y",
-                choices = c("How many pets do you have?" = "num_pets",
-                            "How many minutes have you spent using your phone so far today?" = "minutes",
-                            "How old do you think your stats professor is?" = "how_old",
-                            "How many letters are in the name you prefer your friends and family call you?" = "name_ltrs",
-                            "How many stuffed animals do you own?" = "num_stuffies",
-                            "Randomly select a whole number between 1 and 10 (inclusive)." = "rand_num"),
+                choices = c("Number of pets" = "num_pets",
+                            "Distance traveled to class" = "dist",
+                            "Time on phone in minutes" = "minutes",
+                            "Guess at professor's age" = "how_old",
+                            "Number of letters in nickname" = "name_ltrs",
+                            "Number of stuffed animals" = "num_stuffies",
+                            "Randomly selected number" = "rand_num"),
                 selected = "num_stuffies"
     ),
     # Allow for range again
@@ -109,8 +152,9 @@ ui<-page_sidebar(
   )
 )
 
+#Create server----
 server <- function(input, output, session) {
-  #Dyamnic x-slider
+  #Dynamic x-slider
   output$range1 <- renderUI({
     # Make sure we have input$x (something to work with)
     req(input$x)
@@ -128,7 +172,7 @@ server <- function(input, output, session) {
     
   })
   
-  # Other slider
+  #Dynamic y-slider
   output$range2 <- renderUI({
     # Make sure we have input$y (something to work with)
     req(input$y)

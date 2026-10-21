@@ -34,7 +34,7 @@ __Questions and associate variables__
 
 12. Randomly select a whole number between 1 and 10 (inclusive). ["Randomly selected number" = `rand_num`]
 
-Additional variable: 
+Additional variables: 
 
 I also added columns for Semester (Fall or Spring) [`semester`] and Academic Year (e.g., 2024/2025) [`acad_yr`]. 
 

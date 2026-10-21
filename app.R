@@ -98,6 +98,9 @@ ui<-page_sidebar(
                             "Other animal" = "otherF"),
                 selected = "noneF"
     ),
+    
+    #Subset on levels of the first categorical variable
+    uiOutput("levels1"),
                   
     # Select second categorical variable
     selectInput(inputId = "cat2",
@@ -116,6 +119,9 @@ ui<-page_sidebar(
                             "Other animal" = "otherF"),
                 selected = "stu_yr"
     ),
+    
+    #Subset on levels of the second categorical variable
+    uiOutput("levels2"),
     
     h4("Select two numeric variables"),
     
@@ -148,12 +154,59 @@ ui<-page_sidebar(
                 selected = "num_stuffies"
     ),
     # Allow for range again
-    uiOutput("range2")
+    uiOutput("range2"),
+    # Create action button
+    actionButton("get_data","Collect data")
   )
+  
 )
 
 #Create server----
 server <- function(input, output, session) {
+  
+  #Dynamic radio buttons for first categorical variable
+  output$levels1 <- renderUI({
+    #Make sure we have input$cat1 (something to work with)
+    req(input$cat1)
+    
+    #Get relevant categorical data
+    cat1_data <- studata[[input$cat1]]
+    
+    #Get options
+    cat1_lvls <- levels(cat1_data)
+    
+    #Make buttons
+    radioButtons(inputId = "levels",
+                 label = "Values of interest for first variable",
+                 choices = c(
+                   "All" = "all",
+                   cat1_lvls),
+                 selected = "all"
+                 )
+     })
+  
+  #Dynamic radio buttons for second categorical variable
+  output$levels2 <- renderUI({
+    #Make sure we have input$cat1 (something to work with)
+    req(input$cat2)
+    
+    #Get relevant categorical data
+    cat2_data <- studata[[input$cat2]]
+    
+    #Get options
+    cat2_lvls <- levels(cat2_data)
+    
+    #Make buttons
+    radioButtons(inputId = "levels",
+                 label = "Values of interest for second variable",
+                 choices = c(
+                   "All" = "all",
+                   cat2_lvls),
+                 selected = "all"
+    )
+  })
+  
+  
   #Dynamic x-slider
   output$range1 <- renderUI({
     # Make sure we have input$x (something to work with)
@@ -161,7 +214,7 @@ server <- function(input, output, session) {
    
     # Get relevant numeric data
     x_data <- studata[[input$x]]
-   
+    
     #Make slider
     sliderInput(inputId = "range1",
                 label = "Range of interest for x-value",
@@ -188,7 +241,13 @@ server <- function(input, output, session) {
                 value=c(min(y_data),max(y_data))
     )
   })
-  
+  # Alert user to boring data
+  observeEvent(input$get_data, {
+    if(input$cat1 == input$cat2 || input$x == input$y){
+      shinyalert(title = "Warning!",
+                 "You've repeated your variable selction(s), which could lead to some boring analysys.")
+    }
+  })
 }
 
 

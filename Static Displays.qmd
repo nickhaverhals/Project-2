@@ -1,6 +1,10 @@
 ---
 title: "Static Displays"
 format: pdf
+include-in-header: 
+  text: |
+    \usepackage{fvextra}
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 editor: visual
 ---
 
@@ -291,3 +295,13 @@ age_vi
 ```
 
 It sure seems like the younger the students are, the more all-over-the-place their guesses become. 
+
+Finally, I'd like to give making a heat map a try, even though I don't think it'll be particularly meaningful here. 
+
+```{r}
+heat<-ggplot(studata, aes(x = dist, y = minutes)) + geom_contour_filled(aes(z = how_old))
+
+heat
+```
+
+As expected, this isn't terribly useful but it's here! It's interesting that there were 44 records dropped. I wouldn't have thought there were that many students who reported the same distance and minutes. Looking at the data, though, it's because many students rounded to either 30 or 60 minutes and students who live on campus often entered 0.1 or 0.2 miles, creating a lot of duplication for these variables. 

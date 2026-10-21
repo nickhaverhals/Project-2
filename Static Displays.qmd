@@ -8,13 +8,16 @@ editor: visual
 
 In this document, I'm going to create some static displays so I get some practice creating summaries that will eventually be in my Shiny app. 
 
-# Cleaning things up a bit
+# Prepare for your App
+
+##Cleaning things up a bit
 
 The first thing I'm going to do is create a tibble out of the data in my spreadsheet. 
 
 ```{r}
-# Load the tidyverse and save the data to a tibble with a short 
+# Load the tidyverse, ggplot and save the data to a tibble with a short 
 library(tidyverse)
+library(ggplot2)
 #Create student data tibble
 
 student_data<-read_csv("data.csv",locale=locale(encoding="latin1"))
@@ -33,10 +36,8 @@ Next, we can see that there are columns here that we won't need and columns with
   
 og_questions<-colnames(student_data)
   
-
+# Rename columns I'm keeping
 studata<-student_data|>
-  
-  # Rename columns I'm keeping
   rename(
     num_pets = 7,
     dist = all_of(9),
@@ -70,17 +71,34 @@ studata<-student_data|>
          fish = if_else(fish == 1,"Yes","No"),
          bird = if_else(bird == 1,"Yes","No"),
          other = if_else(other == 1,"Yes","No"),
-         none = if_else(none == 1,"Yes","No")) |>
+         none = if_else(none == 1,"No pets","Has pet(s)")) |>
 
-#Looking at the result from the code above, I decided it'd be nice to group the qualitative and quantitative columns. So, I added that to the pipe.
-  select(5,7,9,10,12:20,everything())
+  #Finally, before I start with the summaries, I'll create factors for my         qualitative variables and assign the levels, as appropriate.
+  
+ 
+  mutate(us_bornF = factor(us_born,levels=c("Yes","No")),
+         since_movieF = factor(since_movie,levels=c("Less than 7 days","7 - 14 days","15 - 30 days","31 - 180 days","More than 180 days or Never")),
+         non_scsuF = factor(non_scsu,levels=c("Yes","No")),
+         stu_yrF = factor(stu_yr,levels=c("Freshman", "Sophomore", "Junior", "Senior","PSEO/Other")),
+         semesterF = factor(semester,levels=c("Fall","Spring")),
+         acad_yrF = factor(acad_yr,levels = c("2024/2025", "2025/2026","2026/2027")),
+         dogF = factor(dog,levels=c("Yes","No")),
+         catF = factor(cat,levels=c("Yes","No")),
+         reptileF = factor(reptile,levels=c("Yes","No")),
+         fishF = factor(fish,levels=c("Yes","No")),
+         birdF = factor(bird,levels=c("Yes","No")),
+         otherF = factor(other,levels=c("Yes","No")),
+         noneF = factor(none,levels=c("Has pet(s)","No pets"))
          
+         )
+
 og_questions
 studata
 ```
-Now, columns 1 - 13 are categorical and columns 14 - 20 are numerical variables. 
 
-# Numerical summaries
+Looks ready to roll!
+
+## Numerical summaries
 
 The first thing I'm going to do is create simple numerical summaries of the numerical data. 
 
@@ -110,3 +128,166 @@ five_num_sum<-apply(X=studata |> select(where(is.numeric)),
 five_num_sum
 ```
 
+## Categorical summaries
+
+Next, let's look at some qualitative data. First, I'd like to look at how my students break out by class level: 
+
+```{r}
+studata|>
+  group_by(stu_yrF)|>
+  summarize(count=n())
+```
+
+Being an introductory course, it makes sense that students would be primarily from lower class levels. Note that PSEO a designation for high school students registered at SCSU. 
+
+Now, how about looking at students who've attended other institutions, by year.
+
+```{r}
+studata|>
+  group_by(stu_yrF,non_scsuF)|>
+  summarize(count = n())|>
+  pivot_wider(names_from = non_scsuF, values_from = count)
+```
+
+Again, these results make sense. Lower level students (Freshman and Sophomore) are much less likely to have transferred. 
+
+_Now_ I'm curious about whether there's a difference in class level versus Semester. My guess is that more freshman focus on STAT 103 (a general education course) during the fall. 
+
+```{r}
+studata|>
+  group_by(stu_yrF,semesterF)|>
+  summarize(count = n())|>
+  pivot_wider(names_from = semesterF, values_from = count)
+```
+
+Interestingly, Fall is more popular in roughly the same proportion across the board, except for PSEO, which is not something I have a good explanation for.
+
+## Numerical and categorical Summaries
+
+Next, lets look at some numerical summaries broken down at levels for categorical data. 
+
+First up, I'm interested in the mean number of stuffed animals the students own, separated by whether they have pets. 
+
+```{r}
+studata|>
+  group_by(noneF)|>
+  summarize(mean_stuffies = mean(num_stuffies))
+```
+
+I'm a little surprised, actually, that the difference is so stark here. 
+
+Next up, I'm curious about how students have judged my age over the last few years. 
+
+```{r}
+studata|>
+  group_by(acad_yrF)|>
+  summarize(mean_guess = mean(how_old))
+```
+Clearly, my exposure to Benjamin Button is having the desired effect. Sadly, the decrease of more than a year between Fall 2025 and Fall 2026 is not directly observable in the table. Let's see if we can make it so. 
+
+
+```{r}
+studata|>
+  group_by(semesterF,acad_yrF)|>
+  summarize(mean_guess = mean(how_old))|>
+  pivot_wider(names_from = acad_yrF, values_from = mean_guess)
+```
+
+There we go! We don't need to consider Spring 2026 to Fall 2026. 
+
+Now, for some...
+
+## Plots
+
+To keep things simple to start, I'm going to make a nice bar graph of how long it's been since the students have seen a movie. 
+
+```{r}
+movie_bar<-ggplot(data=studata,aes(x=since_movieF))+geom_bar()+labs(
+    title = "Time Since Last Time Seeing a Movie in the Theater",
+    x = "")
+
+movie_bar
+```
+
+We can make this a little more interesting. First, I'm going to see if I can make break the bars down by class level. 
+
+```{r}
+movie_bar2<-ggplot(data=studata,aes(x = since_movieF, fill = stu_yrF))+geom_bar()+labs(
+    title = "Time Since Last Time Seeing a Movie in the Theater",
+    x = "") + scale_fill_discrete("Class Level")
+
+movie_bar2
+```
+
+That's informative, I guess, if more than a little busy. Let's add the class level as a facet instead.
+
+```{r}
+movie_bar3<-ggplot(data=studata,aes(x = since_movieF, fill = since_movieF))+geom_bar()+labs(
+    title = "Time Since Last Time Seeing a Movie in the Theater",
+    x = "") + facet_wrap(~ stu_yrF) + scale_fill_discrete("") + theme(axis.text.x = element_blank())
+
+movie_bar3
+```
+
+Next, I'll add a dodge so I can see if there's a difference when looking at students not born in the United States.
+
+```{r}
+movie_bar4<-ggplot(data=studata,aes(x = since_movieF, fill = us_bornF))+geom_bar(position = "dodge")+labs(
+    title = "Time Since Last Time Seeing a Movie in the Theater",
+    x = "") + scale_fill_discrete("Born in US")
+
+movie_bar4
+```
+
+Other than the raw numbers being different, I don't see a substantial difference in moving going behavior here. 
+
+Next, let's look at a few numerical variables. One I find very interesting is what happens when I ask students to enter a random number. If you haven't seen it, you might find [the video that inspired the question interesting](https://youtu.be/d6iQrh2TK98?si=cmeKnHIXzO4LFi5A). Anyway, here's the histogram of the students' "random" numbers.
+
+```{r}
+hist<-ggplot(data = studata, aes(rand_num))+geom_histogram()+labs(title = "Random numbers selected, from 1 to 10")
+hist
+```
+
+I get that one could argue that this shouldn't be considered numeric because nothing's being measured, but I do think students use some "numberness" in making their selections. Ok, fine, you're not convinced. Here's a histogram for the number of minutes students reporting spending on their phone: 
+
+```{r}
+hist2<-ggplot(data = studata, aes(minutes))+geom_histogram(fill="blue",color="black",linetype="solid")+labs(title = "Time spent on phone", x = "Self reported time spent on cellphone")
+hist2
+```
+
+Next, I'd like to look at the relationship between students' time spent on their phones and their class level. I'm wondering if being a younger student corresponds in more phone time. 
+
+```{r}
+box<-ggplot(data = studata, aes(x = stu_yrF, y = minutes)) + geom_boxplot() + labs(title = "Time spent on phone by class level", x = "Class Level", y = "Minutes on day of survey")
+
+box
+```
+
+This worked, but the outliers in the freshman class are making it hard to see the other boxplots too well. 
+
+```{r}
+#Remove data values over 200 minutes
+temp_data<-studata|>filter(minutes<=200)
+
+box2<-ggplot(data = temp_data, aes(x = stu_yrF, y = minutes)) + geom_boxplot() + labs(title = "Time spent on phone by class level, values over 200 removed", x = "Class Level", y = "Minutes on day of survey")
+
+box2
+```
+
+Next, I'd like to look at the relationship between distance traveled to class and minutes spent on phone, in a scatter plot. 
+
+```{r}
+scat<-ggplot(studata, aes(x = dist, y = minutes, color = stu_yrF)) + geom_point() + labs(title = " Plot of distance traveled to class vs. time spent on phone", x = "Distance traveled" , y = "Time on phone", color = "Class level")
+
+scat
+```
+
+Finally, I'd like to look at a violin plot (I don't think we did one of those in class) of students' guesses for my age, based on their class level. I'm curious if older students are better guessers. 
+
+```{r}
+age_vi<-ggplot(studata, aes(x = stu_yrF, y = how_old)) + geom_violin(scale = "area", fill = "blue") + labs(title = "Guesses for age by class level", x = "Class level" , y = "Age guess")
+
+age_vi
+```
+
+It sure seems like the younger the students are, the more all-over-the-place their guesses become. 

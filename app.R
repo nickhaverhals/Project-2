@@ -71,19 +71,17 @@ studata<-student_data|>
 # Create UI ----
 # Create sidebar and widgets
 
-ui<-page_sidebar(
+ui<-page_fluid(
   
-  sidebar = sidebar(
-    #Need lots of room
-    width = 500,
-    
+  card(
     #Begin user instructions
-    h3("Below, select the variables you'd like to analyze. See the About tab for more details."),
+    card_header("Below, select the variables you'd like to analyze. See the About tab for more details.")
+    ),
     
-    h4("Select two categorical variables"),
-    
+    layout_columns(
+      col_widths = c(3,3,3,3),
     # Select first categorical variable
-    selectInput(inputId = "cat1",
+    card(selectInput(inputId = "cat1",
                 label = "First categorical variable",
                 choices = c("Native to US" = "us_bornF",
                             "Time since going to the cinema" = "since_movieF",
@@ -97,14 +95,15 @@ ui<-page_sidebar(
                             "Reptile owner" = "reptileF",
                             "Bird owner" = "birdF",
                             "Other animal" = "otherF"),
-                selected = "noneF"
-    ),
+                selected = "noneF"),
+    
     
     #Subset on levels of the first categorical variable
     uiOutput("levels1"),
+    ),
                   
     # Select second categorical variable
-    selectInput(inputId = "cat2",
+    card(selectInput(inputId = "cat2",
                 label = "Second categorical variable",
                 choices = c("Native to US" = "us_bornF",
                             "Time since going to the cinema" = "since_movieF",
@@ -118,16 +117,15 @@ ui<-page_sidebar(
                             "Reptile owner" = "reptileF",
                             "Bird owner" = "birdF",
                             "Other animal" = "otherF"),
-                selected = "stu_yr"
+                selected = "stu_yrF"
     ),
     
     #Subset on levels of the second categorical variable
-    uiOutput("levels2"),
-    
-    h4("Select two numeric variables"),
+    uiOutput("levels2")
+    ),
     
     #Select first numeric variable
-    selectInput(inputId="x",
+    card(selectInput(inputId="x",
                 label = "First numeric variable, x",
                 choices = c("Number of pets" = "num_pets",
                             "Distance traveled to class" = "dist",
@@ -140,10 +138,11 @@ ui<-page_sidebar(
                 ),
     
     #Allow for range of interest
-    uiOutput("range1"),
+    uiOutput("range1")
+    ),
   
     #Select second numeric variable
-    selectInput(inputId="y",
+    card(selectInput(inputId="y",
                 label = "Second numeric variable, y",
                 choices = c("Number of pets" = "num_pets",
                             "Distance traveled to class" = "dist",
@@ -152,12 +151,13 @@ ui<-page_sidebar(
                             "Number of letters in nickname" = "name_ltrs",
                             "Number of stuffed animals" = "num_stuffies",
                             "Randomly selected number" = "rand_num"),
-                selected = "num_stuffies"
-    ),
-    # Allow for range again
-    uiOutput("range2"),
-    # Create action button
-    actionButton("get_data","Collect data")
+                selected = "num_stuffies"),
+  
+  # Allow for range again
+  uiOutput("range2")
+  ),
+  # Create action button
+  actionButton("get_data","Collect data")
   ),
   
   #Create tabs for main panel
@@ -179,49 +179,22 @@ ui<-page_sidebar(
         # plots tab
         navset_card_tab(
           nav_panel("Summaries of numerical data"),
-           #Create tabs for main panel
-  navset_card_underline(
-    # About tab
-    nav_panel("About",
-              tags$figure(
-                class = "centerFigure",
-                tags$img(
-                  src = "logo.png",
-                  width = 600,
-                  alt = "SCSU logo"
-                )
-              ),
-              "text from README"),
-    
-    #Numeric Data Exploration
-    nav_panel("Data Exploration",
-        # plots tab
-        navset_card_tab(
-          nav_panel("Summaries of numerical data"),
           nav_panel("Summaries of categorical data"),
           nav_panel("Numerical and categorical data")
-        ),
-        
-    #Data tab
-    nav_panel("Data",
-              DT::dataTableOutput("filtered_studata"),
-              downloadButton("get_filtered", "Download Filtered Data"),
-              downloadButton("get_studata", "Download Full Dataset")
-              )
-  )
-  
-)
         )
-    ),
         
+    ),
+  
     #Data tab
     nav_panel("Data",
-              DT::dataTableOutput("filtered_studata"),
+            layout_columns(
+              col_widths = c(3,3),
               downloadButton("get_filtered", "Download Filtered Data"),
               downloadButton("get_studata", "Download Full Dataset")
+              ),
+              DT::dataTableOutput("filtered_studata")
               )
   )
-  
 )
 
 #Create server----

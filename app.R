@@ -164,6 +164,14 @@ ui<-page_sidebar(
   navset_card_underline(
     # About tab
     nav_panel("About",
+              tags$figure(
+                class = "centerFigure",
+                tags$img(
+                  src = "logo.png",
+                  width = 600,
+                  alt = "SCSU logo"
+                )
+              ),
               "text from README"),
     
     #Numeric Summaries tab
@@ -173,7 +181,11 @@ ui<-page_sidebar(
     nav_panel("Graphical summaries"),
     
     #Data tab
-    nav_panel("Data",DT::dataTableOutput("filtered_studata")),
+    nav_panel("Data",
+              DT::dataTableOutput("filtered_studata"),
+              downloadButton("get_filtered", "Download Filtered Data"),
+              downloadButton("get_studata", "Download Full Dataset")
+              )
   )
   
 )
@@ -284,8 +296,25 @@ server <- function(input, output, session) {
       
   })
   
+output$get_filtered <- downloadHandler(
+    filename = function() {
+      paste('filtered_studata-', Sys.Date(), ".csv", sep = '')
+  },
+  content = function(con) {
+    write.csv(filtered_studata(), con)
+  }
+)
+
+output$get_studata <- downloadHandler(
+  filename = function() {
+    paste('studata-', Sys.Date(), ".csv", sep = '')
+  },
+  content = function(con) {
+    write.csv(studata, con)
+  }
+)
   
-  
+
   #Create output table for Data tab
   output$filtered_studata <- DT::renderDataTable({
     filtered_studata() 

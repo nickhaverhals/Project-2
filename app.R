@@ -1,5 +1,6 @@
 library(shiny)
 library(bslib)
+library(DT)
 library(shinyalert)
 library(tidyverse)
 
@@ -157,14 +158,32 @@ ui<-page_sidebar(
     uiOutput("range2"),
     # Create action button
     actionButton("get_data","Collect data")
+  ),
+  
+  #Create tabs for main panel
+  navset_card_underline(
+    # About tab
+    nav_panel("About",
+              "text from README"),
+    
+    #Numeric Summaries tab
+    nav_panel("Numerical summaries"),
+    
+    # plots tab
+    nav_panel("Graphical summaries"),
+    
+    #Data tab
+    nav_panel("Data",DT::dataTableOutput("filtered_studata")),
   )
   
 )
 
 #Create server----
 server <- function(input, output, session) {
+  # Set up trigger to change plots
+  trigger<-reactiveVal(0)
   
-  #Dynamic radio buttons for first categorical variable
+   #Dynamic radio buttons for first categorical variable
   output$levels1 <- renderUI({
     #Make sure we have input$cat1 (something to work with)
     req(input$cat1)
@@ -176,7 +195,7 @@ server <- function(input, output, session) {
     cat1_lvls <- levels(cat1_data)
     
     #Make buttons
-    radioButtons(inputId = "levels",
+    radioButtons(inputId = "levels1",
                  label = "Values of interest for first variable",
                  choices = c(
                    "All" = "all",
@@ -197,7 +216,7 @@ server <- function(input, output, session) {
     cat2_lvls <- levels(cat2_data)
     
     #Make buttons
-    radioButtons(inputId = "levels",
+    radioButtons(inputId = "levels2",
                  label = "Values of interest for second variable",
                  choices = c(
                    "All" = "all",
@@ -222,7 +241,6 @@ server <- function(input, output, session) {
                 max = max(x_data),
                 value=c(min(x_data),max(x_data))
     )
-    
   })
   
   #Dynamic y-slider
@@ -241,13 +259,38 @@ server <- function(input, output, session) {
                 value=c(min(y_data),max(y_data))
     )
   })
-  # Alert user to boring data
+  # Alert user to repeated selections
   observeEvent(input$get_data, {
     if(input$cat1 == input$cat2 || input$x == input$y){
       shinyalert(title = "Warning!",
-                 "You've repeated your variable selction(s), which could lead to some boring analysys.")
-    }
+                 "You've repeated your variable selction(s). Please adjust your variable selections so neither your categorical nor numeric variables are repeated.")
+    } else {trigger(trigger() + 1)}
+  }) 
+
+  #Filter data set based on selections
+  filtered_studata<- eventReactive(trigger(),{
+    #Check to make sure I have what I need
+    req(input$x,input$y,input$range1,input$range2,input$cat1,input$cat2,input$levels1,input$levels2)
+    
+    # Filter
+    studata|>
+      select(all_of(c(input$cat1, input$cat2,input$x,input$y))) |>
+      filter(
+        .data[[input$x]]>=input$range1[1],.data[[input$x]]<=input$range1[2],
+        .data[[input$y]]>=input$range2[1],.data[[input$y]]<=input$range2[2],
+        (input$levels1 == "all" | .data[[input$cat1]] == input$levels1),
+        (input$levels2 == "all" | .data[[input$cat2]] == input$levels2) 
+      )
+      
   })
+  
+  
+  
+  #Create output table for Data tab
+  output$filtered_studata <- DT::renderDataTable({
+    filtered_studata() 
+  })
+    
 }
 
 

@@ -174,12 +174,46 @@ ui<-page_sidebar(
               ),
               "text from README"),
     
-    #Numeric Summaries tab
-    nav_panel("Numerical summaries"),
+    #Numeric Data Exploration
+    nav_panel("Data Exploration",
+        # plots tab
+        navset_card_tab(
+          nav_panel("Summaries of numerical data"),
+           #Create tabs for main panel
+  navset_card_underline(
+    # About tab
+    nav_panel("About",
+              tags$figure(
+                class = "centerFigure",
+                tags$img(
+                  src = "logo.png",
+                  width = 600,
+                  alt = "SCSU logo"
+                )
+              ),
+              "text from README"),
     
-    # plots tab
-    nav_panel("Graphical summaries"),
-    
+    #Numeric Data Exploration
+    nav_panel("Data Exploration",
+        # plots tab
+        navset_card_tab(
+          nav_panel("Summaries of numerical data"),
+          nav_panel("Summaries of categorical data"),
+          nav_panel("Numerical and categorical data")
+        ),
+        
+    #Data tab
+    nav_panel("Data",
+              DT::dataTableOutput("filtered_studata"),
+              downloadButton("get_filtered", "Download Filtered Data"),
+              downloadButton("get_studata", "Download Full Dataset")
+              )
+  )
+  
+)
+        )
+    ),
+        
     #Data tab
     nav_panel("Data",
               DT::dataTableOutput("filtered_studata"),

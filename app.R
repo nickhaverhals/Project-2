@@ -178,7 +178,10 @@ ui<-page_fluid(
     nav_panel("Data Exploration",
         # plots tab
         navset_card_tab(
-          nav_panel("Summaries of numerical data"),
+          nav_panel("Summaries of numerical data",
+                    checkboxInput(inputId = "show_num_sum", label = "Show summary statistics",value=FALSE),
+                    uiOutput("num_sum_spot")
+                    ),
           nav_panel("Summaries of categorical data"),
           nav_panel("Numerical and categorical data")
         )
@@ -302,6 +305,14 @@ server <- function(input, output, session) {
       )
       
   })
+  
+  output$num_sum_spot<-renderTable({
+    #Check for checkbox
+    req(input$show_num_sum == TRUE)
+    
+      filtered_studata() |> 
+        summarise(across(where(is.numeric)), list(Mean = ~mean(.x),SD = ~sd(.x), Min = ~min(.x), Q1 = ~quantile(.x, 0.25), Median = ~quantile(.x,0.5), Q3 = ~quantile(.x,0.75), Max = ~max(.x)))
+    })
   
 output$get_filtered <- downloadHandler(
     filename = function() {

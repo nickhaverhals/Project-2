@@ -179,7 +179,7 @@ ui<-page_fluid(
         # plots tab
         navset_card_tab(
           nav_panel("Summaries of numerical data",
-                    h6("First table gives statistics for all selected categories, combined. The next three give the relevant means"),
+                    h6("First table gives statistics for all selected categories, combined. The next three give the relevant means."),
                     checkboxInput(inputId = "show_num_sum", label = "Show summary statistics",value=FALSE),
                     fluidRow(
                       column(width = 3, tableOutput("num_sum_spot")),
@@ -188,6 +188,16 @@ ui<-page_fluid(
                       column(width = 3, tableOutput("comb_sum_spot"))
                     )
                     ),
+          nav_panel("Summaries of numerical data",
+                    h6("First table gives statistics for all selected categories, combined. The next three give the relevant means."),
+                    checkboxInput(inputId = "show_num_sum", label = "Show summary statistics",value=FALSE),
+                    fluidRow(
+                      column(width = 3, tableOutput("num_sum_spot")),
+                      column(width = 3, tableOutput("cat1_sum_spot")),
+                      column(width = 3, tableOutput("cat2_sum_spot")),
+                      column(width = 3, tableOutput("comb_sum_spot"))
+                    )
+          ),
           nav_panel("Summaries of categorical data"),
           nav_panel("Numerical and categorical data")
         )

@@ -68,6 +68,29 @@ studata<-student_data|>
          
   )
 
+
+# Create name vectors since I've discovered I need it later
+num_labs<- c("Number of pets" = "num_pets",
+             "Distance traveled to class" = "dist",
+             "Time on phone in minutes" = "minutes",
+             "Guess at professor's age" = "how_old",
+             "Number of letters in nickname" = "name_ltrs",
+             "Number of stuffed animals" = "num_stuffies",
+             "Randomly selected number" = "rand_num")
+
+cat_labs <- c("Native to US" = "us_bornF",
+              "Time since going to the cinema" = "since_movieF",
+              "Transfer status" = "non_scsuF",
+              "University class level" = "stu_yrF",
+              "Semester" = "semesterF",
+              "Academic Year" = "acad_yrF",
+              "Pet owner (any)" = "noneF",
+              "Dog owner" = "dogF",
+              "Cat owner" = "catF",
+              "Reptile owner" = "reptileF",
+              "Bird owner" = "birdF",
+              "Other animal" = "otherF")
+
 # Create UI ----
 # Create sidebar and widgets
 
@@ -83,18 +106,7 @@ ui<-page_fluid(
     # Select first categorical variable
     card(selectInput(inputId = "cat1",
                 label = "First categorical variable",
-                choices = c("Native to US" = "us_bornF",
-                            "Time since going to the cinema" = "since_movieF",
-                            "Transfer status" = "non_scsuF",
-                            "University class level" = "stu_yrF",
-                            "Semester" = "semesterF",
-                            "Academic Year" = "acad_yrF",
-                            "Pet owner (any)" = "noneF",
-                            "Dog owner" = "dogF",
-                            "Cat owner" = "catF",
-                            "Reptile owner" = "reptileF",
-                            "Bird owner" = "birdF",
-                            "Other animal" = "otherF"),
+                choices = cat_labs,
                 selected = "noneF"),
     
     
@@ -105,18 +117,7 @@ ui<-page_fluid(
     # Select second categorical variable
     card(selectInput(inputId = "cat2",
                 label = "Second categorical variable",
-                choices = c("Native to US" = "us_bornF",
-                            "Time since going to the cinema" = "since_movieF",
-                            "Transfer status" = "non_scsuF",
-                            "University class level" = "stu_yrF",
-                            "Semester" = "semesterF",
-                            "Academic Year" = "acad_yrF",
-                            "Pet owner (any)" = "noneF",
-                            "Dog owner" = "dogF",
-                            "Cat owner" = "catF",
-                            "Reptile owner" = "reptileF",
-                            "Bird owner" = "birdF",
-                            "Other animal" = "otherF"),
+                choices = cat_labs,
                 selected = "stu_yrF"
     ),
     
@@ -127,14 +128,8 @@ ui<-page_fluid(
     #Select first numeric variable
     card(selectInput(inputId="x",
                 label = "First numeric variable, x",
-                choices = c("Number of pets" = "num_pets",
-                            "Distance traveled to class" = "dist",
-                            "Time on phone in minutes" = "minutes",
-                            "Guess at professor's age" = "how_old",
-                            "Number of letters in nickname" = "name_ltrs",
-                            "Number of stuffed animals" = "num_stuffies",
-                            "Randomly selected number" = "rand_num"),
-                selected = "num_pets"
+                choices = num_labs,
+                selected = "dist"
                 ),
     
     #Allow for range of interest
@@ -144,14 +139,8 @@ ui<-page_fluid(
     #Select second numeric variable
     card(selectInput(inputId="y",
                 label = "Second numeric variable, y",
-                choices = c("Number of pets" = "num_pets",
-                            "Distance traveled to class" = "dist",
-                            "Time on phone in minutes" = "minutes",
-                            "Guess at professor's age" = "how_old",
-                            "Number of letters in nickname" = "name_ltrs",
-                            "Number of stuffed animals" = "num_stuffies",
-                            "Randomly selected number" = "rand_num"),
-                selected = "num_stuffies"),
+                choices = num_labs,
+                selected = "minutes"),
   
   # Allow for range again
   uiOutput("range2")
@@ -187,10 +176,19 @@ ui<-page_fluid(
                       column(width = 3, tableOutput("cat1_sum_spot")),
                       column(width = 3, tableOutput("cat2_sum_spot")),
                       column(width = 3, tableOutput("comb_sum_spot"))
-                    )
                     ),
+                    #Working here: UI----
+                    h6("Click the box below to see histograms of selected data."),
+                    checkboxInput(inputId = "show_hists", label = "Show histograms",value=FALSE),
+                    fluidRow(
+                       column(width = 6, plotOutput("hist1_spot"))
+                       #column(width = 6, tableOutput("hist2_spot")),
+                       )
                     
-          #Working here: UI----
+                    #end new code
+                    
+                    ),
+          
           nav_panel("Summaries of categorical data",
                     # plots tab
                     h6("One and two way tables for selected variables"),
@@ -209,14 +207,14 @@ ui<-page_fluid(
       ),
     #Data tab
     nav_panel("Data",
-            layout_columns(
-              col_widths = c(3,3),
-              downloadButton("get_filtered", "Download Filtered Data"),
-              downloadButton("get_studata", "Download Full Dataset")
+              layout_columns(
+                col_widths = c(3,3),
+                downloadButton("get_filtered", "Download Filtered Data"),
+                downloadButton("get_studata", "Download Full Dataset")
               ),
               DT::dataTableOutput("filtered_studata")
-            )
-)
+    )
+  )
 )
 
 
@@ -338,7 +336,8 @@ server <- function(input, output, session) {
                        }
     )
     as.data.frame(sum_results)
-    },rownames = TRUE)
+    },rownames = TRUE)|>
+    bindEvent(input$get_data)
   
   #Numerical summary table cat1
   output$cat1_sum_spot<-renderTable({
@@ -349,7 +348,8 @@ server <- function(input, output, session) {
       group_by(.data[[input$cat1]])|>
       summarize(across(where(is.numeric), ~mean(.x, na.rm = TRUE)), .groups = "drop")
     as.data.frame(cat1_sum_results)
-  },rownames = FALSE)
+  },rownames = FALSE)|>
+    bindEvent(input$get_data)
   
   #Numerical summary table cat2
   output$cat2_sum_spot<-renderTable({
@@ -360,7 +360,8 @@ server <- function(input, output, session) {
     group_by(.data[[input$cat2]])|>
     summarize(across(where(is.numeric), ~mean(.x, na.rm = TRUE)), .groups = "drop")
   as.data.frame(cat2_sum_results)
-},rownames = FALSE)
+},rownames = FALSE)|>
+    bindEvent(input$get_data)
   
   #Numerical summary table combined
   output$comb_sum_spot<-renderTable({
@@ -371,9 +372,23 @@ server <- function(input, output, session) {
       group_by(.data[[input$cat1]],.data[[input$cat2]])|>
       summarize(across(where(is.numeric), ~mean(.x, na.rm = TRUE)), .groups = "drop")
     as.data.frame(comb_sum_results)
-  },rownames = FALSE)
+  },rownames = FALSE)|>
+    bindEvent(input$get_data)
   
-  # Working here server----
+  #Working here server----
+  # Make first histogram
+  output$hist1_spot<-renderPlot({
+     #Check for checkbox
+     req(input$show_hists == TRUE)
+     
+  ggplot(data = filtered_studata(), aes(x = .data[[input$x]])) + 
+  geom_histogram(fill = "red3", color = "gray", linetype = "solid") + 
+    labs(title = names(which(num_labs == input$x)), x = input$x)
+  }) |>
+    bindEvent(input$get_data)
+  
+  
+  # End new code
   #One and two way tables
   #cat1 one way
   output$cat1_count_spot<-renderTable({
@@ -383,7 +398,8 @@ server <- function(input, output, session) {
     cat1_count_results <- filtered_studata() |> 
       group_by(.data[[input$cat1]])|>
       summarize(count=n())
-      },rownames = FALSE)
+      },rownames = FALSE)|>
+    bindEvent(input$get_data)
   
   #cat2 one way
   output$cat2_count_spot<-renderTable({
@@ -393,7 +409,8 @@ server <- function(input, output, session) {
     cat2_count_results <- filtered_studata() |> 
       group_by(.data[[input$cat2]])|>
       summarize(count=n())
-  },rownames = FALSE)
+  },rownames = FALSE)|>
+    bindEvent(input$get_data)
   
   #Two way
   output$two_way_spot<-renderTable({
@@ -404,33 +421,34 @@ server <- function(input, output, session) {
       group_by(.data[[input$cat1]], .data[[input$cat2]])|>
       summarize(count=n()) |>
       pivot_wider(names_from = .data[[input$cat1]],values_from=count)
-  },rownames = FALSE)
+  },rownames = FALSE)|>
+    bindEvent(input$get_data)
   
-  
-output$get_filtered <- downloadHandler(
+  output$get_filtered <- downloadHandler(
     filename = function() {
       paste('filtered_studata-', Sys.Date(), ".csv", sep = '')
-  },
-  content = function(con) {
-    write.csv(filtered_studata(), con)
-  }
-)
-
-output$get_studata <- downloadHandler(
-  filename = function() {
-    paste('studata-', Sys.Date(), ".csv", sep = '')
-  },
-  content = function(con) {
-    write.csv(studata, con)
-  }
-)
+    },
+    content = function(con) {
+      write.csv(filtered_studata(), con)
+    }
+  )
   
-
+  output$get_studata <- downloadHandler(
+    filename = function() {
+      paste('studata-', Sys.Date(), ".csv", sep = '')
+    },
+    content = function(con) {
+      write.csv(studata, con)
+    }
+  )
+  
+  
   #Create output table for Data tab
   output$filtered_studata <- DT::renderDataTable({
     filtered_studata() 
-  })
-    
+  })|>
+    bindEvent(input$get_data)
+  
 }
 
 

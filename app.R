@@ -172,7 +172,8 @@ ui<-page_fluid(
                   alt = "SCSU logo"
                 )
               ),
-              "text from README"),
+              "text from README"
+    ),
     
     #Numeric Data Exploration
     nav_panel("Data Exploration",
@@ -188,22 +189,24 @@ ui<-page_fluid(
                       column(width = 3, tableOutput("comb_sum_spot"))
                     )
                     ),
-          nav_panel("Summaries of numerical data",
-                    h6("First table gives statistics for all selected categories, combined. The next three give the relevant means."),
-                    checkboxInput(inputId = "show_num_sum", label = "Show summary statistics",value=FALSE),
-                    fluidRow(
-                      column(width = 3, tableOutput("num_sum_spot")),
-                      column(width = 3, tableOutput("cat1_sum_spot")),
-                      column(width = 3, tableOutput("cat2_sum_spot")),
-                      column(width = 3, tableOutput("comb_sum_spot"))
-                    )
-          ),
-          nav_panel("Summaries of categorical data"),
-          nav_panel("Numerical and categorical data")
+                    
+          #Working here: UI----
+          nav_panel("Summaries of categorical data",
+                    # plots tab
+                    h6("One and two way tables for selected variables"),
+                                checkboxInput(inputId = "show_cat_sum", label = "Show category counts",value=FALSE),
+                                fluidRow(
+                                  column(width = 4, tableOutput("cat1_count_spot")),
+                                  column(width = 4, tableOutput("cat2_count_spot")),
+                                  column(width = 4, tableOutput("two_way_spot"))
+                                )
+                      ),
+        #Plots with numerical and categorical
+          nav_panel("Combined Plots",
+        h6("Combined numerical and categorical plots")
+          )
         )
-        
-    ),
-  
+      ),
     #Data tab
     nav_panel("Data",
             layout_columns(
@@ -212,9 +215,10 @@ ui<-page_fluid(
               downloadButton("get_studata", "Download Full Dataset")
               ),
               DT::dataTableOutput("filtered_studata")
-              )
-  )
+            )
 )
+)
+
 
 #Create server----
 server <- function(input, output, session) {
@@ -368,6 +372,40 @@ server <- function(input, output, session) {
       summarize(across(where(is.numeric), ~mean(.x, na.rm = TRUE)), .groups = "drop")
     as.data.frame(comb_sum_results)
   },rownames = FALSE)
+  
+  # Working here server----
+  #One and two way tables
+  #cat1 one way
+  output$cat1_count_spot<-renderTable({
+    #Check for checkbox
+    req(input$show_cat_sum == TRUE)
+    
+    cat1_count_results <- filtered_studata() |> 
+      group_by(.data[[input$cat1]])|>
+      summarize(count=n())
+      },rownames = FALSE)
+  
+  #cat2 one way
+  output$cat2_count_spot<-renderTable({
+    #Check for checkbox
+    req(input$show_cat_sum == TRUE)
+    
+    cat2_count_results <- filtered_studata() |> 
+      group_by(.data[[input$cat2]])|>
+      summarize(count=n())
+  },rownames = FALSE)
+  
+  #Two way
+  output$two_way_spot<-renderTable({
+    #Check for checkbox
+    req(input$show_cat_sum == TRUE)
+    
+    two_way_results <- filtered_studata() |> 
+      group_by(.data[[input$cat1]], .data[[input$cat2]])|>
+      summarize(count=n()) |>
+      pivot_wider(names_from = .data[[input$cat1]],values_from=count)
+  },rownames = FALSE)
+  
   
 output$get_filtered <- downloadHandler(
     filename = function() {

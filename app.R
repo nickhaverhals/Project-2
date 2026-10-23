@@ -95,7 +95,7 @@ cat_labs <- c("Native to US" = "us_bornF",
 # Create sidebar and widgets
 
 ui<-page_fluid(
-  
+  useBusyIndicators(),
   card(
     #Begin user instructions
     card_header("Below, select the variables you'd like to analyze. See the About tab for more details.")
@@ -203,7 +203,7 @@ ui<-page_fluid(
                                   column(width = 4, tableOutput("cat2_count_spot")),
                                   column(width = 4, tableOutput("two_way_spot"))
                                 ),
-                    #Working here: UI----
+                    
                      checkboxInput(inputId = "show_bars", label = "Show bar graphs",value=FALSE),
                     conditionalPanel( "input.show_bars == true",
                           fluidRow(
@@ -217,15 +217,39 @@ ui<-page_fluid(
                            column(width = 4, plotOutput("dodge_spot")))
 
                           
-                    )
-                    
-
-                    #End new code
-                    
-                      ),
+                   )
+              ),
         #Plots with numerical and categorical
           nav_panel("Combined Plots",
-        h6("Combined numerical and categorical plots")
+        h6("Combined numerical and categorical plots"),
+        
+        checkboxInput(inputId = "show_boxes", label = "Show box plots",value=FALSE),
+        conditionalPanel( "input.show_boxes == true",
+                          fluidRow(
+                            column(width = 6, plotOutput("box1_spot")),
+                            column(width = 6, plotOutput("box2_spot"))
+                          ),
+                          
+                          fluidRow(
+                            column(width = 6, plotOutput("box3_spot")),
+                            column(width = 6, plotOutput("box4_spot"))
+                          )
+        ),
+        #Working here: UI----
+        checkboxInput(inputId = "show_violins", label = "Show violin plots",value=FALSE),
+        conditionalPanel( "input.show_violins == true",
+                          fluidRow(
+                            column(width = 6, plotOutput("violin1_spot")),
+                            column(width = 6, plotOutput("violin2_spot"))
+                          ),
+                          
+                          fluidRow(
+                            column(width = 6, plotOutput("violin3_spot")),
+                            column(width = 6, plotOutput("violin4_spot"))
+                          )
+        )
+        
+        #End new code
           )
         )
       ),
@@ -299,7 +323,7 @@ server <- function(input, output, session) {
     x_data <- studata[[input$x]]
     
     #Make slider
-    sliderInput(inputId = "range1",
+    sliderInput(inputId = "slider_x",
                 label = "Range of interest for x-value",
                 min = min(x_data),
                 max = max(x_data),
@@ -316,7 +340,7 @@ server <- function(input, output, session) {
     y_data <- studata[[input$y]]
     
     #Make slider again
-    sliderInput(inputId = "range2",
+    sliderInput(inputId = "slider_y",
                 label = "Range of interest for y-value",
                 min = min(y_data),
                 max = max(y_data),
@@ -334,14 +358,14 @@ server <- function(input, output, session) {
   #Filter data set based on selections
   filtered_studata<- eventReactive(trigger(),{
     #Check to make sure I have what I need
-    req(input$x,input$y,input$range1,input$range2,input$cat1,input$cat2,input$levels1,input$levels2)
+    req(input$x,input$y,input$slider_x,input$slider_y,input$cat1,input$cat2,input$levels1,input$levels2)
     
     # Filter
     studata|>
       select(all_of(c(input$cat1, input$cat2,input$x,input$y))) |>
       filter(
-        .data[[input$x]]>=input$range1[1],.data[[input$x]]<=input$range1[2],
-        .data[[input$y]]>=input$range2[1],.data[[input$y]]<=input$range2[2],
+        .data[[input$x]]>=input$slider_x[1],.data[[input$x]]<=input$slider_x[2],
+        .data[[input$y]]>=input$slider_y[1],.data[[input$y]]<=input$slider_y[2],
         ("all" %in% input$levels1 | .data[[input$cat1]] %in% input$levels1),
         ("all" %in% input$levels2 | .data[[input$cat2]] %in% input$levels2) 
       )
@@ -518,7 +542,7 @@ server <- function(input, output, session) {
   })|>
     bindEvent(input$get_data)
   
-  #Working here: Server----
+  
   output$dodge_spot<-renderPlot({
     #Check for checkbox
     req(input$show_bars == TRUE)
@@ -528,6 +552,89 @@ server <- function(input, output, session) {
   })|>
     bindEvent(input$get_data)
   
+  
+  #Make box plot for cat1, x
+  output$box1_spot <- renderPlot({
+    #Check for checkbox
+    req(input$show_boxes == TRUE)
+    
+    ggplot(data = filtered_studata(), aes(x = .data[[input$cat1]], y = .data[[input$x]])) + geom_boxplot() +
+      labs(title = paste(names(which(cat_labs == input$cat1)), " by ", names(which(num_labs == input$x))), x = names(which(cat_labs == input$cat1)), y = names(which(num_labs == input$x)))
+  })|>
+    bindEvent(input$get_data)
+  
+  #Make box plot for cat1, y
+  output$box2_spot <- renderPlot({
+    #Check for checkbox
+    req(input$show_boxes == TRUE)
+    
+    ggplot(data = filtered_studata(), aes(x = .data[[input$cat1]], y = .data[[input$y]])) + geom_boxplot() +
+      labs(title = paste(names(which(cat_labs == input$cat1)), " by ", names(which(num_labs == input$y))), x = names(which(cat_labs == input$cat1)), y = names(which(num_labs == input$y)))
+  })|>
+    bindEvent(input$get_data)
+  
+  #Make box plot for cat2, x
+  output$box3_spot <- renderPlot({
+    #Check for checkbox
+    req(input$show_boxes == TRUE)
+    
+    ggplot(data = filtered_studata(), aes(x = .data[[input$cat2]], y = .data[[input$x]])) + geom_boxplot() +
+      labs(title = paste(names(which(cat_labs == input$cat2)), " by ", names(which(num_labs == input$x))), x = names(which(cat_labs == input$cat2)), y = names(which(num_labs == input$x)))
+  })|>
+    bindEvent(input$get_data)
+  
+  #Make box plot for cat2, y
+  output$box4_spot <- renderPlot({
+    #Check for checkbox
+    req(input$show_boxes == TRUE)
+    
+    ggplot(data = filtered_studata(), aes(x = .data[[input$cat2]], y = .data[[input$y]])) + geom_boxplot() +
+      labs(title = paste(names(which(cat_labs == input$cat2)), " by ", names(which(num_labs == input$y))), x = names(which(cat_labs == input$cat2)), y = names(which(num_labs == input$y)))
+  })|>
+    bindEvent(input$get_data)
+  
+    #Make violin plot for cat1, x
+  output$violin1_spot <- renderPlot({
+    #Check for checkbox
+    req(input$show_violins == TRUE)
+    
+    ggplot(data = filtered_studata(), aes(x = .data[[input$cat1]], y = .data[[input$x]])) + geom_violin(scale = "area", fill = "red3") +
+      labs(title = paste(names(which(num_labs == input$x)), " by ", names(which(cat_labs == input$cat1))), x = names(which(cat_labs == input$cat1)), y = names(which(num_labs == input$x)))
+  })|>
+    bindEvent(input$get_data)
+  
+  
+  #Make violin plot for cat1, y
+  output$violin2_spot <- renderPlot({
+    #Check for checkbox
+    req(input$show_violins == TRUE)
+    
+    ggplot(data = filtered_studata(), aes(x = .data[[input$cat1]], y = .data[[input$y]])) + geom_violin(scale = "area", fill = "red3") +
+      labs(title = paste(names(which(num_labs == input$y)), " by ", names(which(cat_labs == input$cat1))), x = names(which(cat_labs == input$cat1)), y = names(which(num_labs == input$y)))
+  })|>
+    bindEvent(input$get_data)
+  
+  #Working here: Server----
+  #Make violin plot for cat2, x
+  output$violin3_spot <- renderPlot({
+    #Check for checkbox
+    req(input$show_violins == TRUE)
+    
+    ggplot(data = filtered_studata(), aes(x = .data[[input$cat2]], y = .data[[input$x]])) + geom_violin(scale = "area", fill = "red3") +
+      labs(title = paste(names(which(num_labs == input$x)), " by ", names(which(cat_labs == input$cat2))), x = names(which(cat_labs == input$cat2)), y = names(which(num_labs == input$x)))
+  })|>
+    bindEvent(input$get_data)
+  
+  
+  #Make violin plot for cat2, y
+  output$violin4_spot <- renderPlot({
+    #Check for checkbox
+    req(input$show_violins == TRUE)
+    
+    ggplot(data = filtered_studata(), aes(x = .data[[input$cat2]], y = .data[[input$y]])) + geom_violin(scale = "area", fill = "red3") +
+      labs(title = paste(names(which(num_labs == input$y)), " by ", names(which(cat_labs == input$cat2))), x = names(which(cat_labs == input$cat2)), y = names(which(num_labs == input$y)))
+  })|>
+    bindEvent(input$get_data)
   #End new code
   
   output$get_filtered <- downloadHandler(

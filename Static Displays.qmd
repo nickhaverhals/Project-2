@@ -302,3 +302,5 @@ heat
 ```
 
 As expected, this isn't terribly useful but it's here! It's interesting that there were 44 records dropped. I wouldn't have thought there were that many students who reported the same distance and minutes. Looking at the data, though, it's because many students rounded to either 30 or 60 minutes and students who live on campus often entered 0.1 or 0.2 miles, creating a lot of duplication for these variables.
+
+Regardless, I don't think I'm going to use this for app, as there aren't really any good combinations of variables that would make this meaningful. 

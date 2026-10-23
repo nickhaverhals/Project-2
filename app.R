@@ -179,8 +179,14 @@ ui<-page_fluid(
         # plots tab
         navset_card_tab(
           nav_panel("Summaries of numerical data",
+                    h6("First table gives statistics for all selected categories, combined. The next three give the relevant means"),
                     checkboxInput(inputId = "show_num_sum", label = "Show summary statistics",value=FALSE),
-                    uiOutput("num_sum_spot")
+                    fluidRow(
+                      column(width = 3, tableOutput("num_sum_spot")),
+                      column(width = 3, tableOutput("cat1_sum_spot")),
+                      column(width = 3, tableOutput("cat2_sum_spot")),
+                      column(width = 3, tableOutput("comb_sum_spot"))
+                    )
                     ),
           nav_panel("Summaries of categorical data"),
           nav_panel("Numerical and categorical data")
@@ -306,13 +312,52 @@ server <- function(input, output, session) {
       
   })
   
+  #Numerical summary table all
   output$num_sum_spot<-renderTable({
     #Check for checkbox
     req(input$show_num_sum == TRUE)
     
-      filtered_studata() |> 
-        summarise(across(where(is.numeric)), list(Mean = ~mean(.x),SD = ~sd(.x), Min = ~min(.x), Q1 = ~quantile(.x, 0.25), Median = ~quantile(.x,0.5), Q3 = ~quantile(.x,0.75), Max = ~max(.x)))
-    })
+    sum_results <- apply(X=filtered_studata() |> select(where(is.numeric)), 
+                       MARGIN = 2,
+                       FUN = function(x){
+                         c(Mean = mean(x), SD = sd(x), Min = min(x), Q1 = quantile(x,0.25), Median = quantile(x,0.5), Q3 = quantile(x,0.75), Max = max(x))
+                       }
+    )
+    as.data.frame(sum_results)
+    },rownames = TRUE)
+  
+  #Numerical summary table cat1
+  output$cat1_sum_spot<-renderTable({
+    #Check for checkbox
+    req(input$show_num_sum == TRUE)
+    
+    cat1_sum_results <- filtered_studata() |> 
+      group_by(.data[[input$cat1]])|>
+      summarize(across(where(is.numeric), ~mean(.x, na.rm = TRUE)), .groups = "drop")
+    as.data.frame(cat1_sum_results)
+  },rownames = FALSE)
+  
+  #Numerical summary table cat2
+  output$cat2_sum_spot<-renderTable({
+    #Check for checkbox
+    req(input$show_num_sum == TRUE)
+  
+  cat2_sum_results <- filtered_studata() |> 
+    group_by(.data[[input$cat2]])|>
+    summarize(across(where(is.numeric), ~mean(.x, na.rm = TRUE)), .groups = "drop")
+  as.data.frame(cat2_sum_results)
+},rownames = FALSE)
+  
+  #Numerical summary table combined
+  output$comb_sum_spot<-renderTable({
+    #Check for checkbox
+    req(input$show_num_sum == TRUE)
+    
+    comb_sum_results <- filtered_studata() |> 
+      group_by(.data[[input$cat1]],.data[[input$cat2]])|>
+      summarize(across(where(is.numeric), ~mean(.x, na.rm = TRUE)), .groups = "drop")
+    as.data.frame(comb_sum_results)
+  },rownames = FALSE)
   
 output$get_filtered <- downloadHandler(
     filename = function() {

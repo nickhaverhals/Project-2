@@ -146,7 +146,7 @@ ui<-page_fluid(
   uiOutput("range2")
   ),
   # Create action button
-  actionButton("get_data","Collect data")
+  actionButton("get_data","Refresh App")
   ),
   
   #Create tabs for main panel
@@ -187,15 +187,12 @@ ui<-page_fluid(
                        )
                     ),
                     
-                    #Working here: UI----
                     # Make scatter plot
                     h6("Click the box below to see a scatter plot selected data."),
                     checkboxInput(inputId = "show_scat", label = "Show scatter plot",value=FALSE),
                     plotOutput("scatter_spot"),
-                    
-                    #end new code
-                    
-                    ),
+                    uiOutput("reg_eq"),
+                                        ),
           
           nav_panel("Summaries of categorical data",
                     # plots tab
@@ -205,7 +202,26 @@ ui<-page_fluid(
                                   column(width = 4, tableOutput("cat1_count_spot")),
                                   column(width = 4, tableOutput("cat2_count_spot")),
                                   column(width = 4, tableOutput("two_way_spot"))
-                                )
+                                ),
+                    #Working here: UI----
+                     checkboxInput(inputId = "show_bars", label = "Show bar graphs",value=FALSE),
+                    conditionalPanel( "input.show_bars == true",
+                          fluidRow(
+                            column(width = 6, plotOutput("bar1_spot")),
+                            column(width = 6, plotOutput("bar2_spot"))
+                            ),
+                                      
+                          fluidRow(
+                           column(width = 4, plotOutput("scale_spot")),
+                           column(width = 4, plotOutput("facet_spot")),
+                           column(width = 4, plotOutput("dodge_spot")))
+
+                          
+                    )
+                    
+
+                    #End new code
+                    
                       ),
         #Plots with numerical and categorical
           nav_panel("Combined Plots",
@@ -242,8 +258,8 @@ server <- function(input, output, session) {
     #Get options
     cat1_lvls <- levels(cat1_data)
     
-    #Make buttons
-    radioButtons(inputId = "levels1",
+    #Make checkboxes for level selection
+    checkboxGroupInput(inputId = "levels1",
                  label = "Values of interest for first variable",
                  choices = c(
                    "All" = "all",
@@ -263,8 +279,8 @@ server <- function(input, output, session) {
     #Get options
     cat2_lvls <- levels(cat2_data)
     
-    #Make buttons
-    radioButtons(inputId = "levels2",
+    #Make checkboxes for level selection
+    checkboxGroupInput(inputId = "levels2",
                  label = "Values of interest for second variable",
                  choices = c(
                    "All" = "all",
@@ -326,8 +342,8 @@ server <- function(input, output, session) {
       filter(
         .data[[input$x]]>=input$range1[1],.data[[input$x]]<=input$range1[2],
         .data[[input$y]]>=input$range2[1],.data[[input$y]]<=input$range2[2],
-        (input$levels1 == "all" | .data[[input$cat1]] == input$levels1),
-        (input$levels2 == "all" | .data[[input$cat2]] == input$levels2) 
+        ("all" %in% input$levels1 | .data[[input$cat1]] %in% input$levels1),
+        ("all" %in% input$levels2 | .data[[input$cat2]] %in% input$levels2) 
       )
       
   })
@@ -408,18 +424,23 @@ server <- function(input, output, session) {
   }) |>
     bindEvent(input$get_data)
   
-  #Working here: Server----
-  # Make scatter plot
+    # Make scatter plot
   output$scatter_spot <- renderPlot({
     #Check for checkbox
     req(input$show_scat == TRUE)
     
     ggplot(data = filtered_studata(), aes(x = .data[[input$x]], y = .data[[input$y]], color = .data[[input$cat1]])) +
-      geom_point() + labs(title = paste(names(which(num_labs == input$x)), " vs ", names(which(num_labs == input$y))), x = input$x , y = input$y, color = input$cat1)
+      geom_point() + geom_smooth(method = "lm", formula = y ~ x, se = FALSE, color = "black", linetype = "solid") + labs(title = paste(names(which(num_labs == input$x)), " vs ", names(which(num_labs == input$y))), x = input$x , y = input$y, color = input$cat1)
   })|>
     bindEvent(input$get_data)
   
-  # End new code
+  output$reg_eq <- renderUI({
+    req(input$show_scat==TRUE)
+    fit<-lm(reformulate(input$x, response = input$y),filtered_studata())
+    paste("Linear model: y = ", round(coef(fit)[2],2),'x + ', round(coef(fit)[1],2), " with R^2 = ", round(summary(fit)$r.squared,3))
+  })|>
+    bindEvent(input$get_data)
+  
   
   #One and two way tables
   #cat1 one way
@@ -455,6 +476,59 @@ server <- function(input, output, session) {
       pivot_wider(names_from = .data[[input$cat1]],values_from=count)
   },rownames = FALSE)|>
     bindEvent(input$get_data)
+  
+ 
+  output$bar1_spot<-renderPlot({
+    #Check for checkbox
+    req(input$show_bars == TRUE)
+    
+    ggplot(data=filtered_studata(),aes(x=.data[[input$cat1]]))+geom_bar(fill = "red3", color = "gray")+labs(
+      title = names(which(cat_labs == input$cat1)), x = input$cat1)
+  })|>
+    bindEvent(input$get_data)
+  
+  output$bar2_spot<-renderPlot({
+    #Check for checkbox
+    req(input$show_bars == TRUE)
+    
+    ggplot(data=filtered_studata(),aes(x=.data[[input$cat2]]))+geom_bar(fill = "red3", color = "gray")+labs(
+      title = names(which(cat_labs == input$cat2)), x = input$cat2)
+  })|>
+    bindEvent(input$get_data)
+  
+ 
+  #Make scale fill plot
+  output$scale_spot<-renderPlot({
+    #Check for checkbox
+    req(input$show_bars == TRUE)
+    
+    ggplot(data=filtered_studata(),aes(x=.data[[input$cat1]], fill = .data[[input$cat2]]))+geom_bar()+labs(
+      title = names(which(cat_labs == input$cat1))) + scale_fill_discrete(names(which(cat_labs == input$cat2)))
+  })|>
+    bindEvent(input$get_data)
+  
+  #Make scale fill plot
+  output$facet_spot<-renderPlot({
+    #Check for checkbox
+    req(input$show_bars == TRUE)
+    
+    ggplot(data=filtered_studata(),aes(x=.data[[input$cat1]], fill = .data[[input$cat1]]))+geom_bar()+labs(
+      title = names(which(cat_labs == input$cat1)), x = " ") + facet_wrap(~.data[[input$cat2]]) + scale_fill_discrete("") +
+       theme(axis.text.x = element_blank())
+  })|>
+    bindEvent(input$get_data)
+  
+  #Working here: Server----
+  output$dodge_spot<-renderPlot({
+    #Check for checkbox
+    req(input$show_bars == TRUE)
+    
+    ggplot(data=filtered_studata(),aes(x=.data[[input$cat1]], fill = .data[[input$cat2]]))+geom_bar(position = "dodge")+labs(
+      title = names(which(cat_labs == input$cat1)), x = " ") + scale_fill_discrete(names(which(cat_labs == input$cat2)))
+  })|>
+    bindEvent(input$get_data)
+  
+  #End new code
   
   output$get_filtered <- downloadHandler(
     filename = function() {

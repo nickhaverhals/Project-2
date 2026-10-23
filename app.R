@@ -177,13 +177,21 @@ ui<-page_fluid(
                       column(width = 3, tableOutput("cat2_sum_spot")),
                       column(width = 3, tableOutput("comb_sum_spot"))
                     ),
-                    #Working here: UI----
+                    #Make histograms
                     h6("Click the box below to see histograms of selected data."),
                     checkboxInput(inputId = "show_hists", label = "Show histograms",value=FALSE),
+                    conditionalPanel( "input.show_hists == true",
                     fluidRow(
-                       column(width = 6, plotOutput("hist1_spot"))
-                       #column(width = 6, tableOutput("hist2_spot")),
+                       column(width = 6, plotOutput("hist1_spot")),
+                       column(width = 6, plotOutput("hist2_spot"))
                        )
+                    ),
+                    
+                    #Working here: UI----
+                    # Make scatter plot
+                    h6("Click the box below to see a scatter plot selected data."),
+                    checkboxInput(inputId = "show_scat", label = "Show scatter plot",value=FALSE),
+                    plotOutput("scatter_spot"),
                     
                     #end new code
                     
@@ -375,11 +383,13 @@ server <- function(input, output, session) {
   },rownames = FALSE)|>
     bindEvent(input$get_data)
   
-  #Working here server----
+  
   # Make first histogram
   output$hist1_spot<-renderPlot({
      #Check for checkbox
      req(input$show_hists == TRUE)
+    
+    
      
   ggplot(data = filtered_studata(), aes(x = .data[[input$x]])) + 
   geom_histogram(fill = "red3", color = "gray", linetype = "solid") + 
@@ -387,8 +397,30 @@ server <- function(input, output, session) {
   }) |>
     bindEvent(input$get_data)
   
+  #Make second histogram
+  output$hist2_spot<-renderPlot({
+    #Check for checkbox
+    req(input$show_hists == TRUE)
+    
+    ggplot(data = filtered_studata(), aes(x = .data[[input$y]])) + 
+      geom_histogram(fill = "red3", color = "gray", linetype = "solid") + 
+      labs(title = names(which(num_labs == input$y)), x = input$y)
+  }) |>
+    bindEvent(input$get_data)
+  
+  #Working here: Server----
+  # Make scatter plot
+  output$scatter_spot <- renderPlot({
+    #Check for checkbox
+    req(input$show_scat == TRUE)
+    
+    ggplot(data = filtered_studata(), aes(x = .data[[input$x]], y = .data[[input$y]], color = .data[[input$cat1]])) +
+      geom_point() + labs(title = paste(names(which(num_labs == input$x)), " vs ", names(which(num_labs == input$y))), x = input$x , y = input$y, color = input$cat1)
+  })|>
+    bindEvent(input$get_data)
   
   # End new code
+  
   #One and two way tables
   #cat1 one way
   output$cat1_count_spot<-renderTable({

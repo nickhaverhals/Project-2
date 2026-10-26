@@ -20,17 +20,17 @@ __Questions and associate variables__
 
 5. How old do you think your stats professor is? ["Guess at professor's age" = `how_old`]
 
-6. Were you born in the United States? [Native to US = `us_born`]
+6. Were you born in the United States? ["Native to US" = `us_born`]
 
 7. How many letters are in the name you prefer your friends and family call you? ["Number of letters in nickname" = `name_ltrs`]
 
-8. How many long has it been since you've seen a movie in a movie theater? [Time since going to the cinema = `since_movie`]
+8. How many long has it been since you've seen a movie in a movie theater? ["Time since going to the cinema" = `since_movie`]
 
 9. How many stuffed animals do you own? ["Number of stuffed animals" = `num_stuffies`]
 
-10. Have you attended an institution besides SCSU after graduating high school (or a school equivalent to high school)? [Transfer status = `non_scsu`]
+10. Have you attended an institution besides SCSU after graduating high school (or a school equivalent to high school)? ["Transfer status"" = `non_scsu`]
 
-11. What year of university are you currently in? [University class level = `stu_yr`]
+11. What year of university are you currently in? ["University class level"" = `stu_yr`]
 
 12. Randomly select a whole number between 1 and 10 (inclusive). ["Randomly selected number" = `rand_num`]
 

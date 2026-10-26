@@ -146,7 +146,7 @@ ui<-page_fluid(
   uiOutput("range2")
   ),
   # Create action button
-  actionButton("get_data","Refresh App")
+  actionButton("get_data","Load selected data")
   ),
   
   #Create tabs for main panel
@@ -169,7 +169,6 @@ ui<-page_fluid(
         # plots tab
         navset_card_tab(
           nav_panel("Summaries of numerical data",
-                    h6("First table gives statistics for all selected categories, combined. The next three give the relevant means."),
                     checkboxInput(inputId = "show_num_sum", label = "Show summary statistics",value=FALSE),
                     fluidRow(
                       column(width = 3, tableOutput("num_sum_spot")),
@@ -357,6 +356,8 @@ server <- function(input, output, session) {
 
   #Filter data set based on selections
   filtered_studata<- eventReactive(trigger(),{
+    #Check to make sure button's been pressed
+    req(trigger() > 0)
     #Check to make sure I have what I need
     req(input$x,input$y,input$slider_x,input$slider_y,input$cat1,input$cat2,input$levels1,input$levels2)
     
@@ -372,6 +373,7 @@ server <- function(input, output, session) {
       
   })
   
+  # Numerical summaries----
   #Numerical summary table all
   output$num_sum_spot<-renderTable({
     #Check for checkbox
@@ -384,8 +386,7 @@ server <- function(input, output, session) {
                        }
     )
     as.data.frame(sum_results)
-    },rownames = TRUE)|>
-    bindEvent(input$get_data)
+    },rownames = TRUE)
   
   #Numerical summary table cat1
   output$cat1_sum_spot<-renderTable({
@@ -396,20 +397,18 @@ server <- function(input, output, session) {
       group_by(.data[[input$cat1]])|>
       summarize(across(where(is.numeric), ~mean(.x, na.rm = TRUE)), .groups = "drop")
     as.data.frame(cat1_sum_results)
-  },rownames = FALSE)|>
-    bindEvent(input$get_data)
+  },rownames = FALSE)
   
   #Numerical summary table cat2
   output$cat2_sum_spot<-renderTable({
     #Check for checkbox
     req(input$show_num_sum == TRUE)
-  
-  cat2_sum_results <- filtered_studata() |> 
-    group_by(.data[[input$cat2]])|>
-    summarize(across(where(is.numeric), ~mean(.x, na.rm = TRUE)), .groups = "drop")
-  as.data.frame(cat2_sum_results)
-},rownames = FALSE)|>
-    bindEvent(input$get_data)
+    
+    cat2_sum_results <- filtered_studata() |> 
+      group_by(.data[[input$cat2]])|>
+      summarize(across(where(is.numeric), ~mean(.x, na.rm = TRUE)), .groups = "drop")
+    as.data.frame(cat2_sum_results)
+  },rownames = FALSE)
   
   #Numerical summary table combined
   output$comb_sum_spot<-renderTable({
@@ -420,8 +419,7 @@ server <- function(input, output, session) {
       group_by(.data[[input$cat1]],.data[[input$cat2]])|>
       summarize(across(where(is.numeric), ~mean(.x, na.rm = TRUE)), .groups = "drop")
     as.data.frame(comb_sum_results)
-  },rownames = FALSE)|>
-    bindEvent(input$get_data)
+  },rownames = FALSE)
   
   
   # Make first histogram
@@ -455,8 +453,7 @@ server <- function(input, output, session) {
     
     ggplot(data = filtered_studata(), aes(x = .data[[input$x]], y = .data[[input$y]], color = .data[[input$cat1]])) +
       geom_point() + geom_smooth(method = "lm", formula = y ~ x, se = FALSE, color = "black", linetype = "solid") + labs(title = paste(names(which(num_labs == input$x)), " vs ", names(which(num_labs == input$y))), x = input$x , y = input$y, color = input$cat1)
-  })|>
-    bindEvent(input$get_data)
+  })
   
   output$reg_eq <- renderUI({
     req(input$show_scat==TRUE)
@@ -465,7 +462,7 @@ server <- function(input, output, session) {
   })|>
     bindEvent(input$get_data)
   
-  
+  #Categorical summaries----
   #One and two way tables
   #cat1 one way
   output$cat1_count_spot<-renderTable({
@@ -475,8 +472,7 @@ server <- function(input, output, session) {
     cat1_count_results <- filtered_studata() |> 
       group_by(.data[[input$cat1]])|>
       summarize(count=n())
-      },rownames = FALSE)|>
-    bindEvent(input$get_data)
+      },rownames = FALSE)
   
   #cat2 one way
   output$cat2_count_spot<-renderTable({
@@ -486,8 +482,7 @@ server <- function(input, output, session) {
     cat2_count_results <- filtered_studata() |> 
       group_by(.data[[input$cat2]])|>
       summarize(count=n())
-  },rownames = FALSE)|>
-    bindEvent(input$get_data)
+  },rownames = FALSE)
   
   #Two way
   output$two_way_spot<-renderTable({
@@ -498,8 +493,7 @@ server <- function(input, output, session) {
       group_by(.data[[input$cat1]], .data[[input$cat2]])|>
       summarize(count=n()) |>
       pivot_wider(names_from = .data[[input$cat1]],values_from=count)
-  },rownames = FALSE)|>
-    bindEvent(input$get_data)
+  },rownames = FALSE)
   
  
   output$bar1_spot<-renderPlot({
@@ -508,8 +502,7 @@ server <- function(input, output, session) {
     
     ggplot(data=filtered_studata(),aes(x=.data[[input$cat1]]))+geom_bar(fill = "red3", color = "gray")+labs(
       title = names(which(cat_labs == input$cat1)), x = input$cat1)
-  })|>
-    bindEvent(input$get_data)
+  })
   
   output$bar2_spot<-renderPlot({
     #Check for checkbox
@@ -517,8 +510,7 @@ server <- function(input, output, session) {
     
     ggplot(data=filtered_studata(),aes(x=.data[[input$cat2]]))+geom_bar(fill = "red3", color = "gray")+labs(
       title = names(which(cat_labs == input$cat2)), x = input$cat2)
-  })|>
-    bindEvent(input$get_data)
+  })
   
  
   #Make scale fill plot
@@ -528,8 +520,7 @@ server <- function(input, output, session) {
     
     ggplot(data=filtered_studata(),aes(x=.data[[input$cat1]], fill = .data[[input$cat2]]))+geom_bar()+labs(
       title = names(which(cat_labs == input$cat1))) + scale_fill_discrete(names(which(cat_labs == input$cat2)))
-  })|>
-    bindEvent(input$get_data)
+  })
   
   #Make scale fill plot
   output$facet_spot<-renderPlot({
@@ -539,8 +530,7 @@ server <- function(input, output, session) {
     ggplot(data=filtered_studata(),aes(x=.data[[input$cat1]], fill = .data[[input$cat1]]))+geom_bar()+labs(
       title = names(which(cat_labs == input$cat1)), x = " ") + facet_wrap(~.data[[input$cat2]]) + scale_fill_discrete("") +
        theme(axis.text.x = element_blank())
-  })|>
-    bindEvent(input$get_data)
+  })
   
   
   output$dodge_spot<-renderPlot({
@@ -549,8 +539,7 @@ server <- function(input, output, session) {
     
     ggplot(data=filtered_studata(),aes(x=.data[[input$cat1]], fill = .data[[input$cat2]]))+geom_bar(position = "dodge")+labs(
       title = names(which(cat_labs == input$cat1)), x = " ") + scale_fill_discrete(names(which(cat_labs == input$cat2)))
-  })|>
-    bindEvent(input$get_data)
+  })
   
   
   #Make box plot for cat1, x
@@ -560,9 +549,8 @@ server <- function(input, output, session) {
     
     ggplot(data = filtered_studata(), aes(x = .data[[input$cat1]], y = .data[[input$x]])) + geom_boxplot() +
       labs(title = paste(names(which(cat_labs == input$cat1)), " by ", names(which(num_labs == input$x))), x = names(which(cat_labs == input$cat1)), y = names(which(num_labs == input$x)))
-  })|>
-    bindEvent(input$get_data)
-  
+  })
+  #Combined plots----
   #Make box plot for cat1, y
   output$box2_spot <- renderPlot({
     #Check for checkbox

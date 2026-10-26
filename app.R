@@ -161,7 +161,13 @@ ui<-page_fluid(
                   alt = "SCSU logo"
                 )
               ),
-              "text from README"
+              navset_card_tab(
+                nav_panel("Information about data"),
+                nav_panel("How to use app",
+                          markdown("After selecting the data you're interested above, nagivate through the **Data Exploration** tab to find the sumarized data you're interested in.<br><br> *Important note*: If you choose to subest on any of the variables above, this filters **all** the data you see. For instance, if you choose to only gather information on students with pets, but have all university class levels selected, the tables and plots you see will only include students with pets (even though the tables and plots may not refer to pet ownership). <br><br>In the **Numerical summaries** subtab, you have the option to display tables with summary statistics, histograms and/or a scatterplot (fitted with a least sqaures line)  for the selected variables. Note that the line is fit with the to <u>all</u> the selected data, but the color of the dots are grouped by the first categorical variable.<br><br> ")
+                
+              )
+    )
     ),
     
     #Numeric Data Exploration
